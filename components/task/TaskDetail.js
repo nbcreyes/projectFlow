@@ -35,6 +35,7 @@ import {
   Flag,
   Clock,
 } from "lucide-react";
+import TaskEditor from "@/components/editor/TaskEditor";
 
 const STATUS_OPTIONS = [
   { value: "TODO", label: "To Do" },
@@ -53,8 +54,14 @@ const PRIORITY_OPTIONS = [
 ];
 
 const LABEL_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e",
-  "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
 ];
 
 /**
@@ -80,7 +87,7 @@ export default function TaskDetail({
   const [titleValue, setTitleValue] = useState(task.title);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [descriptionValue, setDescriptionValue] = useState(
-    task.description || ""
+    task.description || "",
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -195,7 +202,7 @@ export default function TaskDetail({
             name: newLabelName,
             color: newLabelColor,
           }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -222,9 +229,7 @@ export default function TaskDetail({
       });
 
       if (res.ok) {
-        router.push(
-          `/workspace/${workspaceId}/project/${projectId}/board`
-        );
+        router.push(`/workspace/${workspaceId}/project/${projectId}/board`);
         router.refresh();
       }
     } catch (err) {
@@ -287,7 +292,7 @@ export default function TaskDetail({
                   className={cn(
                     "text-2xl font-bold leading-tight",
                     canEdit &&
-                      "cursor-pointer hover:bg-accent rounded px-2 py-1 -mx-2 transition-colors"
+                      "cursor-pointer hover:bg-accent rounded px-2 py-1 -mx-2 transition-colors",
                   )}
                   onClick={() => canEdit && setIsEditingTitle(true)}
                 >
@@ -347,7 +352,7 @@ export default function TaskDetail({
                     canEdit
                       ? "cursor-pointer hover:bg-accent transition-colors"
                       : "bg-muted/30",
-                    !task.description && "text-muted-foreground"
+                    !task.description && "text-muted-foreground",
                   )}
                   onClick={() => canEdit && setIsEditingDescription(true)}
                 >
@@ -358,12 +363,14 @@ export default function TaskDetail({
 
             <Separator />
 
-            {/* Document editor placeholder - replaced in Step 11 */}
+            {/* Document editor */}
             <div>
               <h3 className="text-sm font-semibold mb-2">Document</h3>
-              <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-                Rich text document editor coming in Step 11
-              </div>
+              <TaskEditor
+                taskId={task.id}
+                initialDocument={task.document}
+                canEdit={canEdit}
+              />
             </div>
 
             <Separator />
@@ -471,19 +478,14 @@ export default function TaskDetail({
               </p>
               <div className="space-y-1.5">
                 {task.assignees.map(({ user }) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-2"
-                  >
+                  <div key={user.id} className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={user.image} />
                       <AvatarFallback className="text-xs">
                         {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm truncate flex-1">
-                      {user.name}
-                    </span>
+                    <span className="text-sm truncate flex-1">{user.name}</span>
                     {canEdit && (
                       <button
                         onClick={() => handleAssigneeToggle(user.id)}
@@ -510,7 +512,7 @@ export default function TaskDetail({
                       <div className="space-y-1">
                         {workspaceMembers.map((member) => {
                           const isAssigned = task.assignees.some(
-                            (a) => a.user.id === member.user.id
+                            (a) => a.user.id === member.user.id,
                           );
                           return (
                             <button
@@ -582,7 +584,7 @@ export default function TaskDetail({
                     <div className="space-y-1 mb-2">
                       {labels.map((label) => {
                         const isApplied = task.labels.some(
-                          (l) => l.label.id === label.id
+                          (l) => l.label.id === label.id,
                         );
                         return (
                           <button
@@ -604,14 +606,9 @@ export default function TaskDetail({
                         );
                       })}
                     </div>
-                    {labels.length > 0 && (
-                      <Separator className="my-2" />
-                    )}
+                    {labels.length > 0 && <Separator className="my-2" />}
                     {isCreatingLabel ? (
-                      <form
-                        onSubmit={handleCreateLabel}
-                        className="space-y-2"
-                      >
+                      <form onSubmit={handleCreateLabel} className="space-y-2">
                         <Input
                           value={newLabelName}
                           onChange={(e) => setNewLabelName(e.target.value)}
@@ -694,9 +691,7 @@ export default function TaskDetail({
                 />
               ) : (
                 <span className="text-sm">
-                  {task.dueDate
-                    ? formatDate(task.dueDate)
-                    : "No due date"}
+                  {task.dueDate ? formatDate(task.dueDate) : "No due date"}
                 </span>
               )}
             </div>
@@ -712,9 +707,7 @@ export default function TaskDetail({
                   className="h-8 text-sm"
                   value={
                     task.startDate
-                      ? new Date(task.startDate)
-                          .toISOString()
-                          .split("T")[0]
+                      ? new Date(task.startDate).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
@@ -740,9 +733,7 @@ export default function TaskDetail({
                 <User className="h-3.5 w-3.5 shrink-0" />
                 <span>
                   Created by{" "}
-                  <span className="text-foreground">
-                    {task.createdBy.name}
-                  </span>
+                  <span className="text-foreground">{task.createdBy.name}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
