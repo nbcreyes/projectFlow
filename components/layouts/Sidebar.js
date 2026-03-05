@@ -28,12 +28,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Main application sidebar.
  * Collapsible - stores state in Zustand (persisted to localStorage).
- * Shows workspace switcher, navigation, and user profile.
  */
 export default function Sidebar({ workspaces, user }) {
   const params = useParams();
@@ -42,7 +46,8 @@ export default function Sidebar({ workspaces, user }) {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const workspaceId = params?.workspaceId;
-  const currentWorkspace = workspaces.find((w) => w.id === workspaceId) || workspaces[0];
+  const currentWorkspace =
+    workspaces.find((w) => w.id === workspaceId) || workspaces[0];
 
   const navLinks = [
     {
@@ -90,7 +95,7 @@ export default function Sidebar({ workspaces, user }) {
           isCollapsed ? "w-16" : "w-64"
         )}
       >
-        {/* Collapse toggle button */}
+        {/* Collapse toggle */}
         <button
           onClick={toggle}
           className="absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
@@ -112,13 +117,9 @@ export default function Sidebar({ workspaces, user }) {
                   isCollapsed && "justify-center"
                 )}
               >
-                {/* Workspace avatar */}
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-                  {currentWorkspace
-                    ? getInitials(currentWorkspace.name)
-                    : "?"}
+                  {currentWorkspace ? getInitials(currentWorkspace.name) : "?"}
                 </div>
-
                 {!isCollapsed && (
                   <>
                     <span className="flex-1 truncate text-sm font-medium">
@@ -129,26 +130,33 @@ export default function Sidebar({ workspaces, user }) {
                 )}
               </button>
             </DropdownMenuTrigger>
-
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {workspaces.map((workspace) => (
                 <DropdownMenuItem key={workspace.id} asChild>
-                  <Link href={`/workspace/${workspace.id}`} className="flex items-center gap-2">
+                  <Link
+                    href={`/workspace/${workspace.id}`}
+                    className="flex items-center gap-2"
+                  >
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold">
                       {getInitials(workspace.name)}
                     </div>
                     <span className="truncate">{workspace.name}</span>
                     {workspace.id === workspaceId && (
-                      <span className="ml-auto text-xs text-muted-foreground">Current</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        Current
+                      </span>
                     )}
                   </Link>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/onboarding" className="flex items-center gap-2">
+                <Link
+                  href="/onboarding"
+                  className="flex items-center gap-2"
+                >
                   <Plus className="h-4 w-4" />
                   New workspace
                 </Link>
@@ -157,11 +165,14 @@ export default function Sidebar({ workspaces, user }) {
           </DropdownMenu>
         </div>
 
-        {/* Navigation links */}
+        {/* Nav links */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              pathname === link.href ||
+              (link.href !== `/workspace/${workspaceId}` &&
+                pathname.startsWith(link.href));
 
             const linkEl = (
               <Link
@@ -193,7 +204,7 @@ export default function Sidebar({ workspaces, user }) {
           })}
         </nav>
 
-        {/* User profile and sign out */}
+        {/* User profile */}
         <div className="border-t p-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -212,19 +223,24 @@ export default function Sidebar({ workspaces, user }) {
                 {!isCollapsed && (
                   <>
                     <div className="flex-1 overflow-hidden text-left">
-                      <p className="truncate text-sm font-medium">{user?.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="truncate text-sm font-medium">
+                        {user?.name}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
                     </div>
                     <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </>
                 )}
               </button>
             </DropdownMenuTrigger>
-
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <p className="font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground font-normal">{user?.email}</p>
+                <p className="text-xs text-muted-foreground font-normal">
+                  {user?.email}
+                </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
