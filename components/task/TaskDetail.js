@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import TaskEditor from "@/components/editor/TaskEditor";
 import TaskAttachments from "@/components/task/TaskAttachments";
+import TaskComments from "@/components/task/TaskComments";
 
 const STATUS_OPTIONS = [
   { value: "TODO", label: "To Do" },
@@ -74,10 +75,12 @@ export default function TaskDetail({
   columns,
   workspaceMembers,
   labels: initialLabels,
+  comments: initialComments,
   workspaceId,
   projectId,
   currentUserId,
   currentUserRole,
+  currentUser,
 }) {
   const router = useRouter();
   const canEdit = currentUserRole !== "VIEWER";
@@ -387,15 +390,14 @@ export default function TaskDetail({
 
             <Separator />
 
-            {/* Comments placeholder - replaced in Step 13 */}
-            <div>
-              <h3 className="text-sm font-semibold mb-2">
-                Comments ({task._count.comments})
-              </h3>
-              <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-                Comments coming in Step 13
-              </div>
-            </div>
+            {/* Comments */}
+            <TaskComments
+              taskId={task.id}
+              initialComments={initialComments}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              currentUser={currentUser}
+            />
           </div>
 
           {/* Sidebar */}

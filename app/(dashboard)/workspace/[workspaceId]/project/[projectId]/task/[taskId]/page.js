@@ -97,16 +97,34 @@ export default async function TaskPage({ params }) {
     orderBy: { name: "asc" },
   });
 
+  // Fetch comments
+  const comments = await prisma.comment.findMany({
+    where: { taskId, parentId: null },
+    include: {
+      author: {
+        select: { id: true, name: true, image: true },
+      },
+      reactions: {
+        include: {
+          user: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
   return (
     <TaskDetail
       task={task}
       columns={board?.columns || []}
       workspaceMembers={workspaceMembers}
       labels={labels}
+      comments={comments}
       workspaceId={workspaceId}
       projectId={projectId}
       currentUserId={session.user.id}
       currentUserRole={membership.role}
+      currentUser={{ id: session.user.id, name: session.user.name, image: session.user.image }}
     />
   );
 }
