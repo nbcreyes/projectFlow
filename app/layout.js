@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import SessionProvider from "@/components/layouts/SessionProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,15 +20,13 @@ export const metadata = {
   description: "Project management for modern teams. Kanban boards, documents, and real-time collaboration in one place.",
 };
 
-/**
- * Root layout wraps every page in the application.
- * Font CSS variables are injected here so all components can reference them.
- */
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
