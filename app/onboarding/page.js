@@ -5,29 +5,34 @@ import prisma from "@/lib/prisma";
 import OnboardingForm from "@/components/workspace/OnboardingForm";
 
 export const metadata = {
-  title: "Set up your workspace",
+  title: "Create workspace",
 };
 
 /**
- * Onboarding page.
- * If the user already has a workspace, redirect to it.
- * If not, show the workspace creation form.
+ * Onboarding / new workspace page.
+ * searchParams must be awaited in Next.js 16.
  */
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
     redirect("/login");
   }
 
-  const membership = await prisma.workspaceMember.findFirst({
-    where: { userId: session.user.id },
-    include: { workspace: true },
-    orderBy: { joinedAt: "desc" },
-  });
+  // Await searchParams as required by Next.js 16
+  const resolvedParams = await searchParams;
+  const isNewUser = resolvedParams?.new === "true";
 
-  if (membership) {
-    redirect(`/workspace/${membership.workspace.id}`);
+  if (!isNewUser) {
+    const membership = await prisma.workspaceMember.findFirst({
+      where: { userId: session.user.id },
+      include: { workspace: true },
+      orderBy: { joinedAt: "desc" },
+    });
+
+    if (membership) {
+      redirect(`/workspace/${membership.workspace.id}`);
+    }
   }
 
   return (
