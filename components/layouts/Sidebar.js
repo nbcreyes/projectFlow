@@ -72,7 +72,7 @@ export default function Sidebar({ workspaces, user }) {
     },
     {
       label: "Search",
-      href: `/search`,
+      href: `/search?workspaceId=${workspaceId}`,
       icon: Search,
     },
     {
@@ -92,7 +92,7 @@ export default function Sidebar({ workspaces, user }) {
       <aside
         className={cn(
           "relative flex flex-col h-screen border-r bg-card transition-all duration-300 ease-in-out shrink-0",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-16" : "w-64",
         )}
       >
         {/* Collapse toggle */}
@@ -114,7 +114,7 @@ export default function Sidebar({ workspaces, user }) {
               <button
                 className={cn(
                   "flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent transition-colors text-left",
-                  isCollapsed && "justify-center"
+                  isCollapsed && "justify-center",
                 )}
               >
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
@@ -153,10 +153,7 @@ export default function Sidebar({ workspaces, user }) {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link
-                  href="/onboarding"
-                  className="flex items-center gap-2"
-                >
+                <Link href="/onboarding" className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   New workspace
                 </Link>
@@ -183,7 +180,7 @@ export default function Sidebar({ workspaces, user }) {
                   isCollapsed && "justify-center px-2",
                   isActive
                     ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -211,7 +208,7 @@ export default function Sidebar({ workspaces, user }) {
               <button
                 className={cn(
                   "flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent transition-colors",
-                  isCollapsed && "justify-center"
+                  isCollapsed && "justify-center",
                 )}
               >
                 <Avatar className="h-7 w-7 shrink-0">

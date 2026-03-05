@@ -6,7 +6,6 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-import CodeBlock from "@tiptap/extension-code-block";
 import { cn } from "@/lib/utils";
 import {
   Bold,
@@ -47,8 +46,9 @@ function ToolbarButton({ onClick, isActive, disabled, children, title }) {
 
 /**
  * TipTap rich text editor with toolbar and auto-save.
- * immediatelyRender: false prevents the SSR hydration mismatch warning
- * that occurs because TipTap initializes browser-only state.
+ * StarterKit is configured to exclude codeBlock since we add it
+ * separately for explicit control. Underline is added explicitly
+ * and excluded from StarterKit to prevent duplicate extension warnings.
  */
 export default function TaskEditor({ taskId, initialDocument, canEdit }) {
   const [saveStatus, setSaveStatus] = useState("saved");
@@ -76,10 +76,11 @@ export default function TaskEditor({ taskId, initialDocument, canEdit }) {
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
+        // Disable built-in code block so our explicit one takes over
         codeBlock: false,
       }),
+      // Add underline explicitly — do NOT also add it via StarterKit
       Underline,
-      CodeBlock,
       CharacterCount,
       Placeholder.configure({
         placeholder: canEdit
@@ -91,12 +92,8 @@ export default function TaskEditor({ taskId, initialDocument, canEdit }) {
     editable: canEdit,
     onUpdate: ({ editor }) => {
       if (!canEdit) return;
-
       setSaveStatus("unsaved");
-
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         saveDocument(editor.getJSON());
       }, 2000);
@@ -111,9 +108,7 @@ export default function TaskEditor({ taskId, initialDocument, canEdit }) {
 
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
   }, []);
 
@@ -157,27 +152,21 @@ export default function TaskEditor({ taskId, initialDocument, canEdit }) {
           <div className="w-px h-4 bg-border mx-1" />
 
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             isActive={editor.isActive("heading", { level: 1 })}
             title="Heading 1"
           >
             <Heading1 className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive("heading", { level: 2 })}
             title="Heading 2"
           >
             <Heading2 className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             isActive={editor.isActive("heading", { level: 3 })}
             title="Heading 3"
           >
@@ -208,16 +197,14 @@ export default function TaskEditor({ taskId, initialDocument, canEdit }) {
             <Quote className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            isActive={editor.isActive("codeBlock")}
-            title="Code block"
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            isActive={editor.isActive("code")}
+            title="Code"
           >
             <Code className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().setHorizontalRule().run()
-            }
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
             title="Horizontal rule"
           >
             <Minus className="h-3.5 w-3.5" />
