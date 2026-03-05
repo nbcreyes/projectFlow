@@ -1,14 +1,16 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import MembersClient from "@/components/workspace/MembersClient";
 
 export const metadata = {
   title: "Members",
 };
 
 /**
- * Members page placeholder.
- * params must be awaited in Next.js 16.
+ * Workspace members page.
+ * Fetches all members server-side and passes them to the client component.
  */
 export default async function MembersPage({ params }) {
   const session = await getServerSession(authOptions);
@@ -19,12 +21,40 @@ export default async function MembersPage({ params }) {
 
   const { workspaceId } = await params;
 
+  const requesterMembership = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: { workspaceId, userId: session.user.id },
+    },
+    include: { workspace: true },
+  });
+
+  if (!requesterMembership) {
+    redirect("/onboarding");
+  }
+
+  const members = await prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          createdAt: true,
+        },
+      },
+    },
+    orderBy: { joinedAt: "asc" },
+  });
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold tracking-tight">Members</h1>
-      <p className="text-muted-foreground mt-1">
-        Full member management coming in Step 5.
-      </p>
-    </div>
+    <MembersClient
+      members={members}
+      currentUserId={session.user.id}
+      currentUserRole={requesterMembership.role}
+      workspaceId={workspaceId}
+      workspace={requesterMembership.workspace}
+    />
   );
 }
