@@ -36,6 +36,7 @@ import {
   Clock,
 } from "lucide-react";
 import TaskEditor from "@/components/editor/TaskEditor";
+import TaskAttachments from "@/components/task/TaskAttachments";
 
 const STATUS_OPTIONS = [
   { value: "TODO", label: "To Do" },
@@ -372,6 +373,17 @@ export default function TaskDetail({
                 canEdit={canEdit}
               />
             </div>
+
+            <Separator />
+
+            {/* Attachments */}
+            <TaskAttachments
+              taskId={task.id}
+              initialAttachments={task.attachments}
+              canEdit={canEdit}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+            />
 
             <Separator />
 
