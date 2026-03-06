@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(request, { params }) {
   try {
@@ -53,6 +54,15 @@ export async function POST(request, { params }) {
       title: "You were assigned to a task",
       message: `You have been assigned to "${task.title}"`,
       linkUrl: `/workspace/${task.project.workspaceId}/project/${task.projectId}/task/${task.id}`,
+    });
+
+    await logActivity({
+      workspaceId: task.project.workspaceId,
+      projectId: task.projectId,
+      taskId: task.id,
+      userId: session.user.id,
+      type: "TASK_ASSIGNED",
+      description: `assigned ${assignee.user.name} to "${task.title}"`,
     });
 
     return NextResponse.json({ assignee }, { status: 201 });

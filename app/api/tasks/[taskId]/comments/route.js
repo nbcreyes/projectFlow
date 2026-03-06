@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(request, { params }) {
   try {
@@ -130,6 +131,15 @@ export async function POST(request, { params }) {
         linkUrl: `/workspace/${task.project.workspaceId}/project/${task.projectId}/task/${task.id}`,
       });
     }
+
+    await logActivity({
+      workspaceId: task.project.workspaceId,
+      projectId: task.projectId,
+      taskId: task.id,
+      userId: session.user.id,
+      type: "COMMENT_ADDED",
+      description: `commented on "${task.title}"`,
+    });
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

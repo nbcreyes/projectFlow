@@ -2,11 +2,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logActivity } from "@/lib/activity";
 
-/**
- * GET /api/workspaces/[workspaceId]/projects/[projectId]/tasks
- * Returns all tasks for a project with assignees and labels.
- */
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -31,9 +28,7 @@ export async function GET(request, { params }) {
       include: {
         assignees: {
           include: {
-            user: {
-              select: { id: true, name: true, image: true },
-            },
+            user: { select: { id: true, name: true, image: true } },
           },
         },
         labels: {
@@ -56,10 +51,6 @@ export async function GET(request, { params }) {
   }
 }
 
-/**
- * POST /api/workspaces/[workspaceId]/projects/[projectId]/tasks
- * Creates a new task in a column.
- */
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -84,19 +75,16 @@ export async function POST(request, { params }) {
 
     if (!title || !title.trim()) {
       return NextResponse.json(
-        { error: "Task title is required" },
+        { error: "Title is required" },
         { status: 400 }
       );
     }
 
-    // Get the highest order value in this column so new task goes to the bottom
     const lastTask = await prisma.task.findFirst({
-      where: { projectId, columnId: columnId || null },
+      where: { projectId, columnId },
       orderBy: { order: "desc" },
       select: { order: true },
     });
-
-    const order = lastTask ? lastTask.order + 1 : 0;
 
     const task = await prisma.task.create({
       data: {
@@ -105,14 +93,12 @@ export async function POST(request, { params }) {
         columnId: columnId || null,
         createdById: session.user.id,
         priority,
-        order,
+        order: (lastTask?.order ?? -1) + 1,
       },
       include: {
         assignees: {
           include: {
-            user: {
-              select: { id: true, name: true, image: true },
-            },
+            user: { select: { id: true, name: true, image: true } },
           },
         },
         labels: {
@@ -122,6 +108,15 @@ export async function POST(request, { params }) {
           select: { comments: true, attachments: true },
         },
       },
+    });
+
+    await logActivity({
+      workspaceId,
+      projectId,
+      taskId: task.id,
+      userId: session.user.id,
+      type: "TASK_CREATED",
+      description: `created task "${task.title}"`,
     });
 
     return NextResponse.json({ task }, { status: 201 });

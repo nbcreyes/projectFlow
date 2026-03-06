@@ -11,10 +11,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// -----------------------------------------------------------------------------
-// Enums
-// -----------------------------------------------------------------------------
-
 enum Role {
   OWNER
   ADMIN
@@ -48,13 +44,25 @@ enum NotificationType {
   PROJECT_CREATED
   COMMENT_MENTION
   COMMENT_REPLY
+  COMMENT_ADDED
 }
 
-// -----------------------------------------------------------------------------
-// User
-// Represents an account in the system. Created on registration.
-// NextAuth stores session data separately but references this model.
-// -----------------------------------------------------------------------------
+enum ActivityType {
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_DELETED
+  TASK_MOVED
+  TASK_ASSIGNED
+  TASK_UNASSIGNED
+  TASK_COMPLETED
+  COMMENT_ADDED
+  ATTACHMENT_ADDED
+  LABEL_ADDED
+  LABEL_REMOVED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  MEMBER_ADDED
+}
 
 model User {
   id             String    @id @default(cuid())
@@ -67,28 +75,22 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  // Auth relations (required by NextAuth Prisma adapter)
-  accounts Account[]
-  sessions Session[]
-
-  // App relations
-  workspaceMembers  WorkspaceMember[]
-  projectMembers    ProjectMember[]
-  assignedTasks     TaskAssignee[]
-  createdTasks      Task[]            @relation("TaskCreator")
-  comments          Comment[]
-  commentReactions  CommentReaction[]
-  notifications     Notification[]    @relation("NotificationRecipient")
-  triggeredNotifs   Notification[]    @relation("NotificationTrigger")
-  createdProjects   Project[]
+  accounts         Account[]
+  sessions         Session[]
+  workspaceMembers WorkspaceMember[]
+  projectMembers   ProjectMember[]
+  assignedTasks    TaskAssignee[]
+  createdTasks     Task[]            @relation("TaskCreator")
+  comments         Comment[]
+  commentReactions CommentReaction[]
+  notifications    Notification[]    @relation("NotificationRecipient")
+  triggeredNotifs  Notification[]    @relation("NotificationTrigger")
+  createdProjects  Project[]
+  uploadedAttachments Attachment[]
+  activities       Activity[]
 
   @@map("users")
 }
-
-// -----------------------------------------------------------------------------
-// NextAuth required models
-// These are required by the NextAuth Prisma adapter.
-// -----------------------------------------------------------------------------
 
 model Account {
   id                String  @id @default(cuid())
@@ -130,12 +132,6 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// -----------------------------------------------------------------------------
-// Workspace
-// Top-level container. A user can belong to many workspaces.
-// Think of this like a Notion workspace or a Slack organization.
-// -----------------------------------------------------------------------------
-
 model Workspace {
   id          String   @id @default(cuid())
   name        String
@@ -145,17 +141,12 @@ model Workspace {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members  WorkspaceMember[]
-  projects Project[]
+  members    WorkspaceMember[]
+  projects   Project[]
+  activities Activity[]
 
   @@map("workspaces")
 }
-
-// -----------------------------------------------------------------------------
-// WorkspaceMember
-// Join table between User and Workspace with a role.
-// Role determines what the user can do inside the workspace.
-// -----------------------------------------------------------------------------
 
 model WorkspaceMember {
   id          String   @id @default(cuid())
@@ -171,12 +162,6 @@ model WorkspaceMember {
   @@map("workspace_members")
 }
 
-// -----------------------------------------------------------------------------
-// Project
-// Lives inside a workspace. Has boards, tasks, and members.
-// Can be archived without being deleted.
-// -----------------------------------------------------------------------------
-
 model Project {
   id          String    @id @default(cuid())
   workspaceId String
@@ -190,19 +175,15 @@ model Project {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdBy   User            @relation(fields: [createdById], references: [id])
-  members     ProjectMember[]
-  boards      Board[]
-  tasks       Task[]
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy  User            @relation(fields: [createdById], references: [id])
+  members    ProjectMember[]
+  boards     Board[]
+  tasks      Task[]
+  activities Activity[]
 
   @@map("projects")
 }
-
-// -----------------------------------------------------------------------------
-// ProjectMember
-// Controls which workspace members have access to a specific project.
-// -----------------------------------------------------------------------------
 
 model ProjectMember {
   id        String   @id @default(cuid())
@@ -218,12 +199,6 @@ model ProjectMember {
   @@map("project_members")
 }
 
-// -----------------------------------------------------------------------------
-// Board
-// A Kanban board inside a project. A project can have multiple boards.
-// Contains ordered columns.
-// -----------------------------------------------------------------------------
-
 model Board {
   id        String   @id @default(cuid())
   projectId String
@@ -236,12 +211,6 @@ model Board {
 
   @@map("boards")
 }
-
-// -----------------------------------------------------------------------------
-// Column
-// A column inside a Kanban board (e.g. "To Do", "In Progress", "Done").
-// Order is stored as an integer for easy reordering.
-// -----------------------------------------------------------------------------
 
 model Column {
   id        String   @id @default(cuid())
@@ -257,12 +226,6 @@ model Column {
 
   @@map("columns")
 }
-
-// -----------------------------------------------------------------------------
-// Task
-// The core unit of work. Belongs to a project and optionally a column.
-// Has assignees, labels, attachments, comments, and a document.
-// -----------------------------------------------------------------------------
 
 model Task {
   id          String       @id @default(cuid())
@@ -288,14 +251,10 @@ model Task {
   attachments Attachment[]
   comments    Comment[]
   document    Document?
+  activities  Activity[]
 
   @@map("tasks")
 }
-
-// -----------------------------------------------------------------------------
-// TaskAssignee
-// Many-to-many between Task and User.
-// -----------------------------------------------------------------------------
 
 model TaskAssignee {
   id         String   @id @default(cuid())
@@ -310,11 +269,6 @@ model TaskAssignee {
   @@map("task_assignees")
 }
 
-// -----------------------------------------------------------------------------
-// Label
-// Colored tags that can be applied to tasks within a project.
-// -----------------------------------------------------------------------------
-
 model Label {
   id        String   @id @default(cuid())
   projectId String?
@@ -326,11 +280,6 @@ model Label {
 
   @@map("labels")
 }
-
-// -----------------------------------------------------------------------------
-// TaskLabel
-// Many-to-many between Task and Label.
-// -----------------------------------------------------------------------------
 
 model TaskLabel {
   id      String @id @default(cuid())
@@ -344,31 +293,18 @@ model TaskLabel {
   @@map("task_labels")
 }
 
-// -----------------------------------------------------------------------------
-// Document
-// A rich text document attached to a task (one per task).
-// Content is stored as JSON (TipTap editor format).
-// The liveblocksRoomId links this document to a Liveblocks room
-// for real-time collaboration.
-// -----------------------------------------------------------------------------
-
 model Document {
-  id              String   @id @default(cuid())
-  taskId          String   @unique
-  content         Json?
-  liveblocksRoomId String  @unique @default(cuid())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(cuid())
+  taskId           String   @unique
+  content          Json?
+  liveblocksRoomId String   @unique @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("documents")
 }
-
-// -----------------------------------------------------------------------------
-// Comment
-// A comment on a task. Supports threaded replies via parentId.
-// -----------------------------------------------------------------------------
 
 model Comment {
   id        String   @id @default(cuid())
@@ -389,11 +325,6 @@ model Comment {
   @@map("comments")
 }
 
-// -----------------------------------------------------------------------------
-// CommentReaction
-// Emoji reactions on a comment. One reaction type per user per comment.
-// -----------------------------------------------------------------------------
-
 model CommentReaction {
   id        String   @id @default(cuid())
   commentId String
@@ -408,32 +339,22 @@ model CommentReaction {
   @@map("comment_reactions")
 }
 
-// -----------------------------------------------------------------------------
-// Attachment
-// A file uploaded to a task. Stored in Cloudinary.
-// url is the Cloudinary delivery URL, publicId is used to delete the file.
-// -----------------------------------------------------------------------------
-
 model Attachment {
-  id         String   @id @default(cuid())
-  taskId     String
-  name       String
-  url        String
-  publicId   String
-  mimeType   String?
-  size       Int?
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  taskId       String
+  name         String
+  url          String
+  publicId     String
+  mimeType     String?
+  size         Int?
+  uploadedById String?
+  createdAt    DateTime @default(now())
 
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task       Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 
   @@map("attachments")
 }
-
-// -----------------------------------------------------------------------------
-// Notification
-// In-app notifications. triggeredById is who caused the notification
-// (e.g. the person who assigned a task). recipientId is who receives it.
-// -----------------------------------------------------------------------------
 
 model Notification {
   id            String           @id @default(cuid())
@@ -450,4 +371,25 @@ model Notification {
   triggeredBy User? @relation("NotificationTrigger", fields: [triggeredById], references: [id], onDelete: SetNull)
 
   @@map("notifications")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  workspaceId String
+  projectId   String
+  taskId      String?
+  userId      String
+  type        ActivityType
+  description String
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt(sort: Desc)])
+  @@index([taskId, createdAt(sort: Desc)])
+  @@map("activities")
 }
