@@ -1,16 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-/**
- * GET /api/workspaces/[workspaceId]
- * params must be awaited in Next.js 16.
- */
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -19,15 +14,12 @@ export async function GET(request, { params }) {
 
     const membership = await prisma.workspaceMember.findUnique({
       where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId: session.user.id,
-        },
+        workspaceId_userId: { workspaceId, userId: session.user.id },
       },
     });
 
     if (!membership) {
-      return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const workspace = await prisma.workspace.findUnique({
@@ -35,23 +27,10 @@ export async function GET(request, { params }) {
       include: {
         members: {
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
+            user: { select: { id: true, name: true, email: true, image: true } },
           },
         },
-        projects: {
-          where: { isArchived: false },
-          orderBy: { createdAt: "desc" },
-        },
-        _count: {
-          select: { members: true, projects: true },
-        },
+        _count: { select: { members: true, projects: true } },
       },
     });
 
@@ -65,14 +44,9 @@ export async function GET(request, { params }) {
   }
 }
 
-/**
- * PATCH /api/workspaces/[workspaceId]
- * params must be awaited in Next.js 16.
- */
 export async function PATCH(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -81,10 +55,7 @@ export async function PATCH(request, { params }) {
 
     const membership = await prisma.workspaceMember.findUnique({
       where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId: session.user.id,
-        },
+        workspaceId_userId: { workspaceId, userId: session.user.id },
       },
     });
 
@@ -93,7 +64,7 @@ export async function PATCH(request, { params }) {
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, slug } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json(
@@ -102,12 +73,31 @@ export async function PATCH(request, { params }) {
       );
     }
 
+    const updateData = {
+      name: name.trim(),
+      description: description?.trim() || null,
+    };
+
+    if (slug && slug.trim()) {
+      const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
+
+      const existing = await prisma.workspace.findUnique({
+        where: { slug: cleanSlug },
+      });
+
+      if (existing && existing.id !== workspaceId) {
+        return NextResponse.json(
+          { error: "This slug is already taken" },
+          { status: 409 }
+        );
+      }
+
+      updateData.slug = cleanSlug;
+    }
+
     const workspace = await prisma.workspace.update({
       where: { id: workspaceId },
-      data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({ workspace });
@@ -115,6 +105,40 @@ export async function PATCH(request, { params }) {
     console.error("Update workspace error:", error);
     return NextResponse.json(
       { error: "Failed to update workspace" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { workspaceId } = await params;
+
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: { workspaceId, userId: session.user.id },
+      },
+    });
+
+    if (!membership || membership.role !== "OWNER") {
+      return NextResponse.json(
+        { error: "Only the workspace owner can delete it" },
+        { status: 403 }
+      );
+    }
+
+    await prisma.workspace.delete({ where: { id: workspaceId } });
+
+    return NextResponse.json({ message: "Workspace deleted" });
+  } catch (error) {
+    console.error("Delete workspace error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete workspace" },
       { status: 500 }
     );
   }
