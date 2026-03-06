@@ -1,15 +1,11 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import SessionProvider from "@/components/layouts/SessionProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata = {
@@ -17,13 +13,13 @@ export const metadata = {
     default: "ProjectFlow",
     template: "%s | ProjectFlow",
   },
-  description: "Project management for modern teams. Kanban boards, documents, and real-time collaboration in one place.",
+  description: "A warm and collaborative project management tool.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${jakarta.variable} font-sans antialiased`}>
         <SessionProvider>
           {children}
         </SessionProvider>
