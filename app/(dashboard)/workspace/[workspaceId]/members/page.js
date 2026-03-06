@@ -1,23 +1,14 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import MembersClient from "@/components/workspace/MembersClient";
 
-export const metadata = {
-  title: "Members",
-};
+export const metadata = { title: "Members" };
 
-/**
- * Workspace members page.
- * Fetches all members server-side and passes them to the client component.
- */
 export default async function MembersPage({ params }) {
   const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/login");
-  }
+  if (!session) redirect("/login");
 
   const { workspaceId } = await params;
 
@@ -28,21 +19,13 @@ export default async function MembersPage({ params }) {
     include: { workspace: true },
   });
 
-  if (!requesterMembership) {
-    redirect("/onboarding");
-  }
+  if (!requesterMembership) redirect("/onboarding");
 
   const members = await prisma.workspaceMember.findMany({
     where: { workspaceId },
     include: {
       user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          createdAt: true,
-        },
+        select: { id: true, name: true, email: true, image: true, createdAt: true },
       },
     },
     orderBy: { joinedAt: "asc" },

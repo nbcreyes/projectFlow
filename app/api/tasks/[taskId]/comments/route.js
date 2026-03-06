@@ -2,11 +2,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
-/**
- * GET /api/tasks/[taskId]/comments
- * Returns all top-level comments for a task with author info.
- */
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -46,9 +43,7 @@ export async function GET(request, { params }) {
         },
         reactions: {
           include: {
-            user: {
-              select: { id: true, name: true },
-            },
+            user: { select: { id: true, name: true } },
           },
         },
       },
@@ -65,10 +60,6 @@ export async function GET(request, { params }) {
   }
 }
 
-/**
- * POST /api/tasks/[taskId]/comments
- * Creates a new comment on a task.
- */
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -123,13 +114,22 @@ export async function POST(request, { params }) {
         },
         reactions: {
           include: {
-            user: {
-              select: { id: true, name: true },
-            },
+            user: { select: { id: true, name: true } },
           },
         },
       },
     });
+
+    if (task.createdById && task.createdById !== session.user.id) {
+      await createNotification({
+        userId: task.createdById,
+        triggeredById: session.user.id,
+        type: "COMMENT_ADDED",
+        title: "New comment on your task",
+        message: `Someone commented on "${task.title}"`,
+        linkUrl: `/workspace/${task.project.workspaceId}/project/${task.projectId}/task/${task.id}`,
+      });
+    }
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,41 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, MoreHorizontal, Shield, LogOut } from "lucide-react";
 
-/**
- * Role badge color map.
- */
 const roleBadgeVariant = {
   OWNER: "default",
   ADMIN: "secondary",
@@ -51,15 +22,8 @@ const roleBadgeVariant = {
   VIEWER: "outline",
 };
 
-/**
- * Roles that can be assigned when inviting or changing a member.
- */
 const assignableRoles = ["ADMIN", "MEMBER", "VIEWER"];
 
-/**
- * Members management client component.
- * Handles invite, role change, and removal interactions.
- */
 export default function MembersClient({
   members,
   currentUserId,
@@ -161,13 +125,11 @@ export default function MembersClient({
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Members</h1>
           <p className="text-muted-foreground mt-1">
-            {members.length} {members.length === 1 ? "member" : "members"} in{" "}
-            {workspace.name}
+            {members.length} {members.length === 1 ? "member" : "members"} in {workspace.name}
           </p>
         </div>
 
@@ -230,10 +192,7 @@ export default function MembersClient({
 
                 <div className="space-y-2">
                   <Label htmlFor="inviteRole">Role</Label>
-                  <Select
-                    value={inviteRole}
-                    onValueChange={setInviteRole}
-                  >
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
                     <SelectTrigger id="inviteRole">
                       <SelectValue />
                     </SelectTrigger>
@@ -267,7 +226,6 @@ export default function MembersClient({
 
       <Separator />
 
-      {/* Members list */}
       <Card>
         <CardHeader>
           <CardTitle>Workspace members</CardTitle>
@@ -280,36 +238,23 @@ export default function MembersClient({
             {members.map((member) => {
               const isCurrentUser = member.userId === currentUserId;
               const isOwner = member.role === "OWNER";
-              const canEdit =
-                canManageMembers && !isOwner && !isCurrentUser;
+              const canEdit = canManageMembers && !isOwner && !isCurrentUser;
               const isLoading = actionLoading === member.id;
 
               return (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-4 px-6 py-4"
-                >
-                  {/* Avatar */}
+                <div key={member.id} className="flex items-center gap-4 px-6 py-4">
                   <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarImage
-                      src={member.user.image}
-                      alt={member.user.name}
-                    />
+                    <AvatarImage src={member.user.image} alt={member.user.name} />
                     <AvatarFallback className="text-sm">
                       {getInitials(member.user.name)}
                     </AvatarFallback>
                   </Avatar>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">
-                        {member.user.name}
-                      </p>
+                      <p className="text-sm font-medium truncate">{member.user.name}</p>
                       {isCurrentUser && (
-                        <span className="text-xs text-muted-foreground">
-                          (you)
-                        </span>
+                        <span className="text-xs text-muted-foreground">(you)</span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
@@ -317,21 +262,14 @@ export default function MembersClient({
                     </p>
                   </div>
 
-                  {/* Joined date */}
                   <p className="text-xs text-muted-foreground hidden md:block shrink-0">
                     Joined {formatDate(member.joinedAt)}
                   </p>
 
-                  {/* Role badge */}
-                  <Badge
-                    variant={roleBadgeVariant[member.role]}
-                    className="shrink-0"
-                  >
-                    {member.role.charAt(0) +
-                      member.role.slice(1).toLowerCase()}
+                  <Badge variant={roleBadgeVariant[member.role]} className="shrink-0">
+                    {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
                   </Badge>
 
-                  {/* Actions */}
                   {canEdit && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -349,9 +287,7 @@ export default function MembersClient({
                         {assignableRoles.map((role) => (
                           <DropdownMenuItem
                             key={role}
-                            onClick={() =>
-                              handleRoleChange(member.id, role)
-                            }
+                            onClick={() => handleRoleChange(member.id, role)}
                             disabled={member.role === role}
                           >
                             <Shield className="h-4 w-4 mr-2" />
@@ -365,9 +301,7 @@ export default function MembersClient({
                         ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() =>
-                            handleRemove(member.id, member.user.name)
-                          }
+                          onClick={() => handleRemove(member.id, member.user.name)}
                           className="text-destructive focus:text-destructive"
                         >
                           <LogOut className="h-4 w-4 mr-2" />

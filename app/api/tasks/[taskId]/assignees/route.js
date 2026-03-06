@@ -2,11 +2,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
-/**
- * POST /api/tasks/[taskId]/assignees
- * Adds an assignee to a task.
- */
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -49,6 +46,15 @@ export async function POST(request, { params }) {
       },
     });
 
+    await createNotification({
+      userId,
+      triggeredById: session.user.id,
+      type: "TASK_ASSIGNED",
+      title: "You were assigned to a task",
+      message: `You have been assigned to "${task.title}"`,
+      linkUrl: `/workspace/${task.project.workspaceId}/project/${task.projectId}/task/${task.id}`,
+    });
+
     return NextResponse.json({ assignee }, { status: 201 });
   } catch (error) {
     if (error.code === "P2002") {
@@ -65,10 +71,6 @@ export async function POST(request, { params }) {
   }
 }
 
-/**
- * DELETE /api/tasks/[taskId]/assignees
- * Removes an assignee from a task.
- */
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions);

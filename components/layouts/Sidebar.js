@@ -1,68 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn, getInitials } from "@/lib/utils";
 import useSidebarStore from "@/lib/store/useSidebarStore";
-import {
-  LayoutDashboard,
-  FolderKanban,
-  Users,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  LogOut,
-  ChevronsUpDown,
-  Bell,
-  Search,
-} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Home,
+  FolderKanban,
+  Users,
+  Bell,
+  Search,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  LogOut,
+  User,
+} from "lucide-react";
 
 /**
- * Main application sidebar.
- * Collapsible - stores state in Zustand (persisted to localStorage).
+ * Collapsible sidebar with workspace switcher, nav links,
+ * notification badge, and user profile dropdown.
  */
-export default function Sidebar({ workspaces, user }) {
-  const params = useParams();
+export default function Sidebar({ workspaces, currentWorkspaceId, user }) {
   const pathname = usePathname();
   const { isCollapsed, toggle } = useSidebarStore();
-  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const workspaceId = params?.workspaceId;
-  const currentWorkspace =
-    workspaces.find((w) => w.id === workspaceId) || workspaces[0];
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((data) => setUnreadCount(data.unreadCount || 0))
+      .catch(() => {});
+  }, []);
+
+  const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
 
   const navLinks = [
     {
       label: "Home",
-      href: `/workspace/${workspaceId}`,
-      icon: LayoutDashboard,
+      href: `/workspace/${currentWorkspaceId}`,
+      icon: Home,
     },
     {
       label: "Projects",
-      href: `/workspace/${workspaceId}/projects`,
+      href: `/workspace/${currentWorkspaceId}/projects`,
       icon: FolderKanban,
     },
     {
       label: "Members",
-      href: `/workspace/${workspaceId}/members`,
+      href: `/workspace/${currentWorkspaceId}/members`,
       icon: Users,
     },
     {
@@ -72,80 +70,65 @@ export default function Sidebar({ workspaces, user }) {
     },
     {
       label: "Search",
-      href: `/search?workspaceId=${workspaceId}`,
+      href: `/search?workspaceId=${currentWorkspaceId}`,
       icon: Search,
     },
     {
       label: "Settings",
-      href: `/workspace/${workspaceId}/settings`,
+      href: `/workspace/${currentWorkspaceId}/settings`,
       icon: Settings,
     },
   ];
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    await signOut({ callbackUrl: "/login" });
+  function isActive(href) {
+    if (href === `/workspace/${currentWorkspaceId}`) {
+      return pathname === href;
+    }
+    return pathname.startsWith(href.split("?")[0]);
   }
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <aside
-        className={cn(
-          "relative flex flex-col h-screen border-r bg-card transition-all duration-300 ease-in-out shrink-0",
-          isCollapsed ? "w-16" : "w-64",
-        )}
-      >
-        {/* Collapse toggle */}
-        <button
-          onClick={toggle}
-          className="absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-3 w-3" />
-          ) : (
-            <ChevronLeft className="h-3 w-3" />
-          )}
-        </button>
-
-        {/* Workspace switcher */}
-        <div className="p-3 border-b">
+    <aside
+      className={cn(
+        "relative flex flex-col h-full border-r bg-background transition-all duration-300",
+        isCollapsed ? "w-16" : "w-60"
+      )}
+    >
+      {/* Workspace switcher */}
+      <div className="p-3 border-b">
+        {isCollapsed ? (
+          <div className="flex items-center justify-center">
+            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+              {getInitials(currentWorkspace?.name || "W")}
+            </div>
+          </div>
+        ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent transition-colors text-left",
-                  isCollapsed && "justify-center",
-                )}
-              >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-                  {currentWorkspace ? getInitials(currentWorkspace.name) : "?"}
+              <button className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left">
+                <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                  {getInitials(currentWorkspace?.name || "W")}
                 </div>
-                {!isCollapsed && (
-                  <>
-                    <span className="flex-1 truncate text-sm font-medium">
-                      {currentWorkspace?.name || "Select workspace"}
-                    </span>
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </>
-                )}
+                <span className="flex-1 text-sm font-semibold truncate">
+                  {currentWorkspace?.name || "Workspace"}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {workspaces.map((workspace) => (
-                <DropdownMenuItem key={workspace.id} asChild>
+            <DropdownMenuContent align="start" className="w-52">
+              {workspaces.map((ws) => (
+                <DropdownMenuItem key={ws.id} asChild>
                   <Link
-                    href={`/workspace/${workspace.id}`}
+                    href={`/workspace/${ws.id}`}
                     className="flex items-center gap-2"
                   >
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold">
-                      {getInitials(workspace.name)}
+                    <div className="h-5 w-5 rounded bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold">
+                      {getInitials(ws.name)}
                     </div>
-                    <span className="truncate">{workspace.name}</span>
-                    {workspace.id === workspaceId && (
+                    <span className="truncate">{ws.name}</span>
+                    {ws.id === currentWorkspaceId && (
                       <span className="ml-auto text-xs text-muted-foreground">
-                        Current
+                        Active
                       </span>
                     )}
                   </Link>
@@ -153,109 +136,120 @@ export default function Sidebar({ workspaces, user }) {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/onboarding" className="flex items-center gap-2">
+                <Link
+                  href="/onboarding/workspace"
+                  className="flex items-center gap-2"
+                >
                   <Plus className="h-4 w-4" />
                   New workspace
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        )}
+      </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive =
-              pathname === link.href ||
-              (link.href !== `/workspace/${workspaceId}` &&
-                pathname.startsWith(link.href));
+      {/* Navigation */}
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {navLinks.map((link) => {
+          const Icon = link.icon;
+          const active = isActive(link.href);
+          const badge =
+            link.label === "Notifications" && unreadCount > 0
+              ? unreadCount
+              : null;
 
-            const linkEl = (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  isCollapsed && "justify-center px-2",
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!isCollapsed && <span>{link.label}</span>}
+          return (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                active
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {!isCollapsed && (
+                <>
+                  <span className="flex-1 truncate">{link.label}</span>
+                  {badge && (
+                    <span className="h-5 min-w-5 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium">
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </>
+              )}
+              {isCollapsed && badge && (
+                <span className="absolute left-8 top-1 h-3.5 w-3.5 rounded-full bg-destructive border-2 border-background" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User profile */}
+      <div className="p-2 border-t">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent transition-colors",
+                isCollapsed && "justify-center"
+              )}
+            >
+              <Avatar className="h-7 w-7 shrink-0">
+                <AvatarImage src={user?.image} />
+                <AvatarFallback className="text-xs">
+                  {getInitials(user?.name)}
+                </AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-medium truncate leading-tight">
+                      {user?.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate leading-tight">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                </>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-52">
+            <DropdownMenuItem asChild>
+              <Link href="/settings/profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Profile settings
               </Link>
-            );
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="text-destructive focus:text-destructive flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-            if (isCollapsed) {
-              return (
-                <Tooltip key={link.href}>
-                  <TooltipTrigger asChild>{linkEl}</TooltipTrigger>
-                  <TooltipContent side="right">{link.label}</TooltipContent>
-                </Tooltip>
-              );
-            }
-
-            return linkEl;
-          })}
-        </nav>
-
-        {/* User profile */}
-        <div className="border-t p-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent transition-colors",
-                  isCollapsed && "justify-center",
-                )}
-              >
-                <Avatar className="h-7 w-7 shrink-0">
-                  <AvatarImage src={user?.image} alt={user?.name} />
-                  <AvatarFallback className="text-xs">
-                    {getInitials(user?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                {!isCollapsed && (
-                  <>
-                    <div className="flex-1 overflow-hidden text-left">
-                      <p className="truncate text-sm font-medium">
-                        {user?.name}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {user?.email}
-                      </p>
-                    </div>
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground font-normal">
-                  {user?.email}
-                </p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Profile settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="text-destructive focus:text-destructive"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                {isSigningOut ? "Signing out..." : "Sign out"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </aside>
-    </TooltipProvider>
+      {/* Collapse toggle */}
+      <button
+        onClick={toggle}
+        className="absolute -right-3 top-6 h-6 w-6 rounded-full border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors z-10"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-3 w-3" />
+        ) : (
+          <ChevronLeft className="h-3 w-3" />
+        )}
+      </button>
+    </aside>
   );
 }
