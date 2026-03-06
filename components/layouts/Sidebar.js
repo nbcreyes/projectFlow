@@ -34,7 +34,7 @@ import {
  * Collapsible sidebar with workspace switcher, nav links,
  * notification badge, and user profile dropdown.
  */
-export default function Sidebar({ workspaces, currentWorkspaceId, user }) {
+export default function Sidebar({ workspaces, currentWorkspaceId, user, onNavigate }) {
   const pathname = usePathname();
   const { isCollapsed, toggle } = useSidebarStore();
   const [unreadCount, setUnreadCount] = useState(0);

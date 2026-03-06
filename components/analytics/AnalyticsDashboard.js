@@ -1,10 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   LineChart,
   Line,
@@ -78,10 +77,6 @@ function StatCard({ title, value, icon: Icon, description, color }) {
   );
 }
 
-/**
- * Workspace analytics dashboard.
- * Fetches data client-side so it is always fresh on load.
- */
 export default function AnalyticsDashboard({ workspaceId, workspaceName, userRole }) {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,7 +129,7 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
   }));
 
   return (
-    <div className="p-8 space-y-8 max-w-6xl">
+    <div className="p-4 md:p-8 space-y-8 max-w-6xl">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -142,7 +137,6 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
         </p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total tasks"
@@ -173,7 +167,6 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
         />
       </div>
 
-      {/* Activity over time */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Activity — last 14 days</CardTitle>
@@ -182,41 +175,16 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={activityByDay}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                width={30}
-              />
-              <Tooltip
-                contentStyle={{
-                  fontSize: 12,
-                  borderRadius: 6,
-                  border: "1px solid hsl(var(--border))",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={false}
-                name="Events"
-              />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))" }} />
+              <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={false} name="Events" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tasks by status */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Tasks by status</CardTitle>
@@ -227,12 +195,10 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={statusChartData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={80} />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))" }}
-                  />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} name="Tasks">
                     {statusChartData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
@@ -244,7 +210,6 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
           </CardContent>
         </Card>
 
-        {/* Tasks by priority */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Tasks by priority</CardTitle>
@@ -255,12 +220,10 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={priorityChartData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={60} />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))" }}
-                  />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} name="Tasks">
                     {priorityChartData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
@@ -274,7 +237,6 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tasks per project */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Tasks per project</CardTitle>
@@ -308,7 +270,6 @@ export default function AnalyticsDashboard({ workspaceId, workspaceName, userRol
           </CardContent>
         </Card>
 
-        {/* Top contributors */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Top contributors</CardTitle>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -205,7 +205,7 @@ export default function TaskDetail({
           <span className="text-foreground truncate max-w-[200px]">{task.title}</span>
         </nav>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col md:flex-row gap-8">
           {/* Main content */}
           <div className="flex-1 min-w-0 space-y-6">
             {/* Title */}
@@ -339,7 +339,7 @@ export default function TaskDetail({
           </div>
 
           {/* Sidebar */}
-          <div className="w-56 shrink-0 space-y-5">
+          <div className="w-full md:w-56 shrink-0 space-y-5">
             {/* Status */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Status</p>

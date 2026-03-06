@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import {
@@ -298,7 +298,7 @@ export default function KanbanBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 p-6 h-full items-start">
+        <div className="flex gap-4 overflow-x-auto pb-4 p-6 h-full items-start">
           <SortableContext
             items={columnIds}
             strategy={horizontalListSortingStrategy}

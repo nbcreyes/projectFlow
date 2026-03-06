@@ -1,17 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { cn, getInitials } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  FolderKanban,
-  CheckSquare,
-  Clock,
-  X,
-  ArrowRight,
-} from "lucide-react";
+import { Search, FolderKanban, CheckSquare, Clock, X, ArrowRight } from "lucide-react";
 
 const RECENT_SEARCHES_KEY = "projectflow:recent-searches";
 const MAX_RECENT = 5;
@@ -33,11 +26,7 @@ function saveRecentSearch(term) {
   } catch {}
 }
 
-/**
- * Full search page with debounced input, grouped results,
- * and keyboard navigation.
- */
-export default function SearchPage({ workspaceId, userId }) {
+export default function SearchPage({ workspaceId }) {
   const router = useRouter();
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -125,12 +114,11 @@ export default function SearchPage({ workspaceId, userId }) {
     }
   }
 
-  const totalResults = allResults.length;
-  const hasResults = results && totalResults > 0;
-  const noResults = results && totalResults === 0 && query.length >= 2;
+  const hasResults = results && allResults.length > 0;
+  const noResults = results && allResults.length === 0 && query.length >= 2;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 space-y-6">
+    <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight mb-1">Search</h1>
         <p className="text-muted-foreground text-sm">
@@ -159,18 +147,14 @@ export default function SearchPage({ workspaceId, userId }) {
       </div>
 
       {isLoading && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          Searching...
-        </p>
+        <p className="text-sm text-muted-foreground text-center py-4">Searching...</p>
       )}
 
       {noResults && !isLoading && (
         <div className="text-center py-8">
           <Search className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
           <p className="text-sm font-medium">No results for "{query}"</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Try a different search term.
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Try a different search term.</p>
         </div>
       )}
 
@@ -196,8 +180,7 @@ export default function SearchPage({ workspaceId, userId }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{task.title}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {task.project.name}
-                      {task.column ? ` · ${task.column.name}` : ""}
+                      {task.project.name}{task.column ? ` · ${task.column.name}` : ""}
                     </p>
                   </div>
                 </div>
@@ -223,12 +206,8 @@ export default function SearchPage({ workspaceId, userId }) {
                     {getInitials(project.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {project.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {project._count.tasks} tasks
-                    </p>
+                    <p className="text-sm font-medium truncate">{project.name}</p>
+                    <p className="text-xs text-muted-foreground">{project._count.tasks} tasks</p>
                   </div>
                 </div>
               )}
@@ -246,10 +225,7 @@ export default function SearchPage({ workspaceId, userId }) {
             {recentSearches.map((term) => (
               <button
                 key={term}
-                onClick={() => {
-                  setQuery(term);
-                  search(term);
-                }}
+                onClick={() => { setQuery(term); search(term); }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm"
               >
                 <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -273,23 +249,12 @@ export default function SearchPage({ workspaceId, userId }) {
   );
 }
 
-function ResultGroup({
-  title,
-  icon: Icon,
-  items,
-  type,
-  allResults,
-  selectedIndex,
-  onNavigate,
-  renderItem,
-}) {
+function ResultGroup({ title, icon: Icon, items, type, allResults, selectedIndex, onNavigate, renderItem }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2 px-1 mb-2">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          {title}
-        </p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
       </div>
       <div className="border rounded-lg overflow-hidden divide-y">
         {items.map((item) => {
@@ -297,7 +262,6 @@ function ResultGroup({
             (r) => r.type === type && r.item.id === item.id
           );
           const isSelected = globalIndex === selectedIndex;
-
           return (
             <button
               key={item.id}

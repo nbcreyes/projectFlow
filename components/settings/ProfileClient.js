@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -299,7 +299,7 @@ export default function ProfileClient({ user }) {
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="��������"
               />
             </div>
             <div className="space-y-2">
@@ -309,7 +309,7 @@ export default function ProfileClient({ user }) {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="��������"
               />
             </div>
             <div className="space-y-2">
@@ -319,7 +319,7 @@ export default function ProfileClient({ user }) {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="��������"
               />
             </div>
             <Feedback msg={passwordMsg} />
@@ -350,7 +350,7 @@ export default function ProfileClient({ user }) {
                 type="password"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="��������"
               />
             </div>
             <Feedback msg={deleteMsg} />

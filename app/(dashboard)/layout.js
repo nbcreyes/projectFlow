@@ -1,13 +1,10 @@
-﻿import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Sidebar from "@/components/layouts/Sidebar";
+import MobileSidebarTrigger from "@/components/layouts/MobileSidebarTrigger";
 
-/**
- * Dashboard layout.
- * Extracts workspaceId from the URL to pass the active workspace to the sidebar.
- */
 export default async function DashboardLayout({ children, params }) {
   const session = await getServerSession(authOptions);
 
@@ -26,19 +23,30 @@ export default async function DashboardLayout({ children, params }) {
     role: m.role,
   }));
 
-  // Extract workspaceId from URL params if present
   const resolvedParams = params ? await params : {};
   const currentWorkspaceId =
     resolvedParams?.workspaceId || workspaces[0]?.id || null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
+      {/* Desktop sidebar - hidden on mobile */}
+      <div className="hidden md:flex">
+        <Sidebar
+          workspaces={workspaces}
+          currentWorkspaceId={currentWorkspaceId}
+          user={session.user}
+        />
+      </div>
+
+      {/* Mobile sidebar drawer trigger */}
+      <MobileSidebarTrigger
         workspaces={workspaces}
         currentWorkspaceId={currentWorkspaceId}
         user={session.user}
       />
-      <main className="flex-1 overflow-y-auto">
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
         {children}
       </main>
     </div>
