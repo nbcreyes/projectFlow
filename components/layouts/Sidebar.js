@@ -19,6 +19,7 @@ import {
   FolderKanban,
   Users,
   Bell,
+  BarChart2,
   Search,
   Settings,
   ChevronLeft,
@@ -67,11 +68,17 @@ export default function Sidebar({ workspaces, currentWorkspaceId, user }) {
       label: "Notifications",
       href: `/notifications`,
       icon: Bell,
+  BarChart2,
     },
     {
       label: "Search",
       href: `/search?workspaceId=${currentWorkspaceId}`,
       icon: Search,
+    },
+    {
+      label: "Analytics",
+      href: `/workspace/${currentWorkspaceId}/analytics`,
+      icon: BarChart2,
     },
     {
       label: "Settings",
